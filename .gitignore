@@ -1,2 +1,4 @@
 env/
-.env
+app/.env
+
+.streamlit/secrets.toml
