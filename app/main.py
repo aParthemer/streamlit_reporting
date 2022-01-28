@@ -1,12 +1,11 @@
-
-
 import streamlit as st
 import pandas as pd
 
 import CONSTANTS as C
 from parse_config import ConfigParser
-from report import get_joined_df,sliders_date
-from upload_csv import validate_uploaded_files,display_upload_status
+from transform import get_joined_df, sliders_date
+from upload_csv import validate_uploaded_files, display_upload_status
+
 
 def cbox_display_state():
     cbox = st.checkbox(label="display state")
@@ -15,7 +14,6 @@ def cbox_display_state():
 
 
 def init_state():
-
     EXPECTED = [ConfigParser(C.DIR_TABLE_CONFIGS / "sk_transactions.yml"),
                 ConfigParser(C.DIR_TABLE_CONFIGS / "sk_transaction_items.yml")]
 
@@ -31,7 +29,8 @@ def init_state():
         st.session_state["uploads_complete"] = False
     if "df_joined" not in st.session_state:
         st.session_state["df_joined"] = None
-
+    if "df_by_date" not in st.session_state:
+        st.session_state["df_by_date"] = None
 
 
 if __name__ == '__main__':
@@ -54,7 +53,6 @@ if __name__ == '__main__':
             st.session_state["uploads_complete"] and
             st.session_state["df_joined"] is None
     ):
-
         dfs = tuple(st.session_state["validated_dfs"])
         configs = tuple(st.session_state["found_configs"])
         prefixes = tuple([c.column_prefix for c in configs])
@@ -69,30 +67,21 @@ if __name__ == '__main__':
         st.session_state["df_joined"] = df_joined
 
     if st.session_state["df_joined"] is not None:
-
         df_joined = st.session_state["df_joined"]
 
         with st.expander(label="Filter by Date",
                          expanded=False):
-            df_by_date = sliders_date(df_joined,dt_column="t_time")
+            df_by_date = sliders_date(df_joined, dt_column="t_time")
+            st.session_state["df_by_date"] = df_by_date
 
-        if df_by_date is not None:
+    df_by_date = st.session_state["df_by_date"]
+    if df_by_date is not None:
+        st.dataframe(df_by_date)
 
-            st.dataframe(df_by_date)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        sbox_reports = st.selectbox(label="Select a report to generate",
+                                    options=[
+                                        "",
+                                        "Revenue by Show",
+                                        "Revenue by Department"], )
+        if sbox_reports == "Revenue by Show":
+            st.write("REVENUE BY SHOW")

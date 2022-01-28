@@ -1,0 +1,32 @@
+---
+table_name: sk_transactions
+description: Raw data from Shopkeep transactions
+dataset_name: source_tables
+column_mapper:
+  Time: time
+  Sales Channel: sales_channel
+  Register Name/Number: register_name_number
+  Cashier Name: cashier_name
+  Operation Type: operation_type
+  Customer Name: customer_name
+  Customer Email: customer_email
+  Gross Amount: gross_amount
+  Discount: discount
+  Net Total: net_total
+  New Liabilities: new_liabilities
+  Tax: tax
+  Total Due: total_due
+  Tips: tips
+  Tendered Amount: tendered_amount
+  Tender Type: tender_type
+  Card Type: card_type
+  Last 4 Digits: last_four_digits
+  Cardholder Name: cardholder_name
+  Receipt Number: receipt_number
+  Transaction ID: transaction_id
+column_prefix: "t_"
+type_conversions:
+  - name: time
+    type: datetime
+    formatter: "%m/%d/%Y %I:%M %p"
+datetime_column: time
