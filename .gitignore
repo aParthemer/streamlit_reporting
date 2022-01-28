@@ -1,4 +1,6 @@
 env/
-app/.env
 
-.streamlit/secrets.toml
+app/.env
+app/scratch.py
+
+data/
