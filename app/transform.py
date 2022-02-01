@@ -15,14 +15,11 @@ Given both `transactions` and `transaction items`
 
 """
 
-
-@st.cache(suppress_st_warning=True)
 def read_csv(csv) -> pd.DataFrame:
     df = pd.read_csv(csv)
     return df
 
 
-@st.cache(suppress_st_warning=True)
 def apply_schema(df: pd.DataFrame,
                  config: ConfigParser) -> pd.DataFrame:
     try:
@@ -32,11 +29,8 @@ def apply_schema(df: pd.DataFrame,
         raise
     return df
 
-
-@st.cache(suppress_st_warning=True)
 def apply_column_prefixes(df: pd.DataFrame,
                           prefix: str):
-
     col_mapper = {}
     for col in df.columns:
         new_col = None
@@ -53,11 +47,9 @@ def apply_column_prefixes(df: pd.DataFrame,
     return df
 
 
-@st.cache(suppress_st_warning=True)
 def join_dfs(dfs: Tuple[pd.DataFrame, pd.DataFrame],
              prefixes: Tuple[str, str],
              primary_key: str) -> pd.DataFrame:
-
     dfs_prefixed = []
     columns_strings = []
     for df, prefix in zip(dfs, prefixes):
@@ -96,12 +88,17 @@ def get_joined_df(dfs: Tuple[pd.DataFrame, pd.DataFrame],
 
     _dfs = []
     for df, config in zip(dfs, configs):
-        _df = apply_schema(df, config)
+        _df = df
+        _df = apply_schema(_df, config)
         _dfs.append(_df)
 
     joined_df = join_dfs(dfs=tuple(_dfs),
                          prefixes=tuple(prefixes),
                          primary_key=primary_key)
+
+    joined_df["t_time"] = pd.to_datetime(joined_df["t_time"],
+                                         infer_datetime_format=True)
+    joined_df["date"] = joined_df["t_time"].dt.date
 
     return joined_df
 
@@ -121,37 +118,39 @@ def filter_by_date(df: pd.DataFrame,
     return df_filtered
 
 
-def sliders_date(df: pd.DataFrame,
-                 dt_column: str) -> pd.DataFrame:
+def cb_slider_dates(key: str, df: pd.DataFrame, dt_column: str):
 
+    start, end = st.session_state[key]
+    _df = df[
+        (df[dt_column].dt.date >= start) &
+        (df[dt_column].dt.date <= end)
+        ]
+
+    st.session_state["df_by_date"] = _df
+    st.session_state["date_expander_state"] = True
+
+
+def slider_dates(df: pd.DataFrame,
+                 dt_column: str) -> None:
     dates = pd.Series(df[dt_column].dt.date.unique())
     dates = dates.sort_values()
 
-    start_slider = st.select_slider(
-        label="Select start date",
-        options=dates.tolist()
+    start, end = st.select_slider(
+        "Select a date range",
+        options=dates,
+        value=(dates.iloc[0], dates.iloc[-1]),
+        key="date_slider",
+        on_change=cb_slider_dates,
+        kwargs={"key": "date_slider",
+                "df": df,
+                "dt_column": dt_column}
     )
-
-
-    end_dates = dates[dates >= start_slider]
-    end_slider = st.select_slider(
-        label="Select end date",
-        options=end_dates.tolist()
-    )
-
-    btn_apply_filter = st.button(label="Apply date filter",)
-
-    if btn_apply_filter:
-        df_ = df[
-            (df[dt_column].dt.date >= start_slider) &
-            (df[dt_column].dt.date <= end_slider)
-            ]
-        start_ = start_slider
-        end_ = end_slider
-        if df_ is not None:
-            n_rows = len(df_.index)
-            st.caption(f"{n_rows} records between `{start_}` and `{end_}`")
-            return df_
+    _df_by_date = st.session_state.get("df_by_date")
+    if _df_by_date is not None:
+        n_rows = len(_df_by_date.index)
+    else:
+        n_rows = len(df.index)
+    st.caption(f"There are {n_rows} records between `{start}` and `{end}`")
 
 def sbox_filter_by_column_value(df: pd.DataFrame,
                                 column: str,
@@ -187,8 +186,8 @@ if __name__ == '__main__':
                             prefixes=("t_", "ti_"),
                             primary_key="transaction_id")
     main_df["t_time"] = pd.to_datetime(main_df["t_time"],
-                                         infer_datetime_format=True)
+                                       infer_datetime_format=True)
 
-    df = sliders_date(main_df,"t_time")
+    df = slider_dates(main_df, "t_time")
     if df is not None:
         st.dataframe(df)

@@ -3,8 +3,9 @@ import pandas as pd
 
 import CONSTANTS as C
 from parse_config import ConfigParser
-from transform import get_joined_df, sliders_date
+from transform import get_joined_df, slider_dates, sbox_filter_by_column_value
 from upload_csv import validate_uploaded_files, display_upload_status
+from report import ticket_sales_by_jam, ticket_price_by_event
 
 
 def cbox_display_state():
@@ -29,8 +30,14 @@ def init_state():
         st.session_state["uploads_complete"] = False
     if "df_joined" not in st.session_state:
         st.session_state["df_joined"] = None
+
+    if "date_expander_state" not in st.session_state:
+        st.session_state["date_expander_state"] = False
     if "df_by_date" not in st.session_state:
         st.session_state["df_by_date"] = None
+
+    if "selected_report" not in st.session_state:
+        st.session_state["selected_report"] = ""
 
 
 if __name__ == '__main__':
@@ -63,25 +70,46 @@ if __name__ == '__main__':
                                   primary_key="transaction_id")
         df_joined["t_time"] = pd.to_datetime(df_joined["t_time"],
                                              infer_datetime_format=True)
-
         st.session_state["df_joined"] = df_joined
 
-    if st.session_state["df_joined"] is not None:
-        df_joined = st.session_state["df_joined"]
+#### GIVEN JOINED DATAFRAME ####
 
-        with st.expander(label="Filter by Date",
-                         expanded=False):
-            df_by_date = sliders_date(df_joined, dt_column="t_time")
-            st.session_state["df_by_date"] = df_by_date
+if st.session_state["df_joined"] is not None:
 
-    df_by_date = st.session_state["df_by_date"]
-    if df_by_date is not None:
-        st.dataframe(df_by_date)
+    df_joined = st.session_state["df_joined"]
 
+    _expanded = st.session_state["date_expander_state"]
+    with st.expander(label="Filter by Date",expanded=_expanded):
+        slider_dates(df_joined, dt_column="t_time")
+
+    # st.dataframe(df_by_date)
+    with st.expander(label="Select a Report"):
         sbox_reports = st.selectbox(label="Select a report to generate",
                                     options=[
                                         "",
-                                        "Revenue by Show",
-                                        "Revenue by Department"], )
-        if sbox_reports == "Revenue by Show":
-            st.write("REVENUE BY SHOW")
+                                        "Ticket Price by Event",
+                                        "Ticket Sales by Event",
+                                        "Bar Sales by Event"
+                                    ],
+                                    index=0,
+                                    key="selected_report")
+
+#### GIVEN: DF BY DATE / SELECTED REPORT
+
+_df_by_date = st.session_state.get("df_by_date")
+_selected_report = st.session_state.get("selected_report")
+if (
+    _df_by_date is not None and
+    _selected_report != ""
+):
+    if _selected_report == "Ticket Sales by Event":
+        event_type = st.selectbox(label="Select event type",
+                                  options=["","Show","Jam"],
+                                  index=0)
+        if event_type == "Show":
+            pass
+        if event_type == "Jam":
+            ticket_sales_by_jam(_df_by_date)
+
+    if _selected_report == "Ticket Price by Event":
+        ticket_price_by_event(_df_by_date)
