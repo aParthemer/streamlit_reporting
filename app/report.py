@@ -1,7 +1,6 @@
 """
 All functions in herein assume the joined dataframe produced by transform.get_joined_df()
 """
-from functools import partial
 
 import pandas as pd
 import numpy as np
