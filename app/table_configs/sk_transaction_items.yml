@@ -1,0 +1,38 @@
+---
+table_name: sk_transaction_items
+description: Raw data from Shopkeep transactions by item export
+dataset_name: source_tables
+column_mapper:
+  Time: time
+  Register Name/Number: register_name_number
+  Cashier Name: cashier_name
+  Operation Type: operation_type
+  Store Code: store_code
+  UPC: upc
+  Line Item: line_item
+  Department: department
+  Category: category
+  Supplier: supplier
+  Supplier Code: supplier_code
+  Cost: cost
+  Price: price
+  Quantity: quantity
+  Modifiers: modifiers
+  Subtotal: subtotal
+  Discounts: discounts
+  Net Total: net_total
+  Tax: tax
+  Total Due: total_due
+  Transaction ID: transaction_id
+  Customer ID: customer_id
+column_prefix: "ti_"
+type_conversions:
+  - name: time
+    type: datetime
+    formatter: "%m/%d/%Y %I:%M %p"
+  - name: quantity
+    type: int
+  - name: customer_id
+    type: str
+    formatter:
+datetime_column: time
