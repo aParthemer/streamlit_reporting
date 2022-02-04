@@ -17,9 +17,10 @@ def highlight_columns(df: pd.DataFrame,
 
     return df
 
-if __name__ == '__main__':
-    data = pd.DataFrame(np.random.randn(5, 3), columns=list('ABC'))
 
+if __name__ == '__main__':
+
+    data = pd.DataFrame(np.random.randn(5, 3), columns=list('ABC'))
     df = highlight_columns(data,["B"])
 
 
