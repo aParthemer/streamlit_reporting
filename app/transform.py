@@ -166,28 +166,3 @@ def sbox_filter_by_column_value(df: pd.DataFrame,
     df_filtered = df[df[column] == option]
 
     return df_filtered
-
-
-if __name__ == '__main__':
-    import CONSTANTS as C
-    from parse_config import ConfigParser
-
-    csv_tr = C.DIR_DATA / "sk_transactions_2021-10-01_2021-12-10.csv"
-    csv_tr_items = C.DIR_DATA / "sk_transaction_items_2021-10-01_2021-12-10.csv"
-
-    df_tr = pd.read_csv(csv_tr)
-    df_tr_items = pd.read_csv(csv_tr_items)
-
-    cfg_tr = ConfigParser(C.DIR_TABLE_CONFIGS / "sk_transactions.yml")
-    cfg_tr_items = ConfigParser(C.DIR_TABLE_CONFIGS / "sk_transaction_items.yml")
-
-    main_df = get_joined_df(dfs=(df_tr, df_tr_items),
-                            configs=(cfg_tr, cfg_tr_items),
-                            prefixes=("t_", "ti_"),
-                            primary_key="transaction_id")
-    main_df["t_time"] = pd.to_datetime(main_df["t_time"],
-                                       infer_datetime_format=True)
-
-    df = slider_dates(main_df, "t_time")
-    if df is not None:
-        st.dataframe(df)

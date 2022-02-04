@@ -5,7 +5,8 @@ import CONSTANTS as C
 from parse_config import ConfigParser
 from transform import get_joined_df, slider_dates, sbox_filter_by_column_value
 from upload_csv import validate_uploaded_files, display_upload_status
-from report import ticket_sales_by_jam, ticket_price_by_event
+import report as rpt
+from charts import bar_chart, sbox_bar_chart, chart_layout
 
 
 def cbox_display_state():
@@ -87,9 +88,7 @@ if st.session_state["df_joined"] is not None:
         sbox_reports = st.selectbox(label="Select a report to generate",
                                     options=[
                                         "",
-                                        "Ticket Price by Event",
-                                        "Ticket Sales by Event",
-                                        "Bar Sales by Event"
+                                        "Ticketing by Event"
                                     ],
                                     index=0,
                                     key="selected_report")
@@ -102,14 +101,35 @@ if (
     _df_by_date is not None and
     _selected_report != ""
 ):
-    if _selected_report == "Ticket Sales by Event":
+    if _selected_report == "Ticketing by Event":
+        st.markdown("## Ticketing by Event")
+
         event_type = st.selectbox(label="Select event type",
                                   options=["","Show","Jam"],
                                   index=0)
-        if event_type == "Show":
-            pass
-        if event_type == "Jam":
-            ticket_sales_by_jam(_df_by_date)
 
-    if _selected_report == "Ticket Price by Event":
-        ticket_price_by_event(_df_by_date)
+        df_tickets = rpt.df_tickets(df_main=_df_by_date)
+        if event_type == "Show":
+            df_shows: pd.DataFrame = rpt.df_tickets_shows(df_tickets=df_tickets)
+            rpt.rpt_tickets_shows(df_shows)
+
+            chart_layout(df_shows,
+                         x="show",
+                         y=["ticket_sales","ticket_returns"],
+                         order_by=["ticket_sales","ticket_returns"],
+                         order_by_labels=["sales","returns"])
+
+        if event_type == "Jam":
+            df_jams:  pd.DataFrame = rpt.df_tickets_jams(df_tickets=df_tickets)
+            rpt.rpt_tickets_jams(df_jams)
+
+            ####
+            chart_layout(df_jams,
+                         x="jam",
+                         y=["ticket_sales","ticket_returns"],
+                         order_by=["ticket_sales","ticket_returns"],
+                         order_by_labels=["sales","returns"])
+            ####
+
+
+
