@@ -30,7 +30,7 @@ def validate_uploaded_files(uploader_key: str):
     else:
         st.session_state["uploads_complete"] = False
 
-def display_upload_status(expected_configs: list[ConfigParser]):
+def display_upload_status(expected_configs: List[ConfigParser]):
 
     found = [c.table_name for c in expected_configs if c in st.session_state["found_configs"]]
     found_str = "".join(["\n- " + t for t in found])
